@@ -9,7 +9,7 @@ Run Time Complexity: O(1) - the push and pop operations of the stack data struct
 The stack data structure usage: The back & forward buttons on the browser; undo & redo functionality in word processors
 """
 
-from projects.python_data_structures_algorithms.my_work.stacks_and_queues.stack import Node, Stack
+from projects.python_data_structures_algorithms.my_work.ch3_stacks_and_queues.stack import Node, Stack
 
 
 def check_balanced_brackets(statement):

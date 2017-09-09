@@ -1,0 +1,152 @@
+"""
+Deterministic selection (randomized selection algorithm)
+-------------------------------------------------------
+- The worst-case performance: O(n^2).
+- Improved version of randomized selection algorithm: O(n)
+-> deterministic selection: finding the median of medians to enable us find a good split during partitioning.
+
+Implementation:
+---------------
+Select a pivot:
+Split a list of unordered items into groups of five elements each.
+Sort and find the median of all the groups.
+Repeat step 1 and step 2 recursively to obtain the true median of the list.
+Use the true median to partition the list of unordered items.
+Recurse into the part of the partitioned list that may contain the ith-smallest element.
+
+
+Pivot selection
+---------------
+- In the random selection algorithm, we selected the first element as the pivot.
+- to improve, replace that step with a sequence of steps that enables us to obtain the true or approximate median.
+
+median_of_medians()
+-------------------
+Note: medians.append(sorted(sublist)[len(sublist)/2]) -> we decided not to sort the list in order to find the
+ith-smallest element, so why employ Python's sorted method ? - since we are sorting a very small list of 5/fewer
+elements, the impact of that operation on the overall performance of the algorithm is considered negligible.
+
+E.g. the list of numbers: [2, 3, 5, 4, 1, 12, 11, 13, 16, 7, 8, 6, 10, 9, 17, 15, 19, 20, 18, 23, 21, 22, 25, 24, 14]
+
+- Break this list into groups of 5 elements each to obtain the following list:
+
+[[2, 3, 5, 4, 1], [12, 11, 13, 16, 7], [8, 6, 10, 9, 17], [15, 19, 20, 18, 23], [21, 22, 25, 24, 14]]
+
+- Sort each of the 5-element lists & obtain their medians => it produces the following list: [3, 12, 9, 19, 22]
+
+- the list has 5 elements => return only the median of the sorted list; else should call the median_of_median function.
+
+get_index_of_nearest_median()
+----------------------------
+The arraylist[first:second] returns an array with index 0 up to the size of the list -1. When we find the index of the
+median, we lose the portion in the list where it occurs because of the new range indexing the [first:second] code
+returns. Therefore, we must add whatever index is returned by arraylist[first:second] to first to obtain the true index
+where the median was found:
+"""
+
+
+# improved  partitioning of the list about the pivot
+def partition(unsorted_array, first_index, last_index):
+    # => there's only one element in our sublist; first_index = last_index => return any
+    if first_index == last_index:
+        nearest_median = unsorted_array[first_index]
+    else:
+        # The nearest_median variable stores the true or approximate median of a given list
+        nearest_median = median_of_medians(unsorted_array[first_index:last_index])
+
+    index_of_nearest_median = get_index_of_nearest_median(unsorted_array, first_index, last_index, nearest_median)
+
+    swap(unsorted_array, first_index, index_of_nearest_median)
+
+    pivot = unsorted_array[first_index]
+    # the approximate median is now stored at first_index of the unsorted list.
+    pivot_index = first_index
+    index_of_last_element = last_index
+
+    less_than_pivot_index = index_of_last_element
+    greater_than_pivot_index = first_index + 1
+
+    while True:
+
+        while unsorted_array[greater_than_pivot_index] < pivot and greater_than_pivot_index < last_index:
+            greater_than_pivot_index += 1
+        while unsorted_array[less_than_pivot_index] > pivot and less_than_pivot_index >= first_index:
+            less_than_pivot_index -= 1
+
+        if greater_than_pivot_index < less_than_pivot_index:
+            swap(unsorted_array, greater_than_pivot_index, less_than_pivot_index)
+        else:
+            break
+
+    unsorted_array[pivot_index] = unsorted_array[less_than_pivot_index]
+    unsorted_array[less_than_pivot_index] = pivot
+
+    return less_than_pivot_index
+
+
+# The median_of_medians - uses recursion to return the true median
+# finds the approximate median of any given list of items
+def median_of_medians(elems):
+    #  split the list elems, into groups of 5 elements each
+    # e.g. if elems = 100 items => 20 groups created
+    sublists = [elems[j:j + 5] for j in range(0, len(elems), 5)]
+
+    medians = []
+    for sublist in sublists:
+        # each sublist is sorted, the median of the 5-element list found
+        # (the element stored in its middle index) & stored in the medians list
+        medians.append(sorted(sublist)[int(len(sublist) / 2)])
+
+    if len(medians) <= 5:
+        # sort the medians  list & return the element located in its middle index:
+        return sorted(medians)[int(len(medians)/2)]
+    else:
+        # if size(list) > 5, recursive call
+        return median_of_medians(medians)
+
+
+def get_index_of_nearest_median(array_list, first, second, median):
+    # if there's only one element in the list
+    if first == second:
+        return first
+    else:
+        return first + array_list[first:second].index(median)
+
+
+# swap two array elements
+def swap(array_list, first, second):
+    temp = array_list[first]
+    array_list[first] = array_list[second]
+    array_list[second] = temp
+
+
+# deterministic selection() looks exactly the same as its random selection counterpart.
+def deterministic_select(array_list, left, right, k):
+    split = partition(array_list, left, right)
+
+    if split == k:
+        return array_list[split]
+    elif split < k:
+        return deterministic_select(array_list, split + 1, right, k)
+    else:
+        return deterministic_select(array_list, left, split-1, k)
+
+
+arrays = [int(i) for i in "2 3 5 4 1 12 11 13 16 7 8 6 10 9 17 15 19 20 18 23 21 22 25 24 14".split(" ")]
+
+print(median_of_medians([25, 21, 98, 100, 76, 22, 43, 60, 89, 87]))
+
+
+stored = [3, 1, 10, 4, 6, 5]
+print(stored)
+print(deterministic_select(stored, 0, 5, 0))
+stored = [3, 1, 10, 4, 6, 5]
+print(deterministic_select(stored, 0, 5, 1))
+stored = [3, 1, 10, 4, 6, 5]
+print(deterministic_select(stored, 0, 5, 2))
+stored = [3, 1, 10, 4, 6, 5]
+print(deterministic_select(stored, 0, 5, 3))
+stored = [3, 1, 10, 4, 6, 5]
+print(deterministic_select(stored, 0, 5, 4))
+stored = [3, 1, 10, 4, 6, 5]
+print(deterministic_select(stored, 0, 5, 5))
